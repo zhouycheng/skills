@@ -9,6 +9,7 @@
 | 技能 | 用途 |
 |---|---|
 | browser-use | 通过 CDP 直接控制浏览器，做自动化、抓取、测试和截图 |
+| chatgpt-imagegen | 用 ChatGPT 订阅生成图片与 GIF/WebP 动图，无需 API key |
 | composition-patterns | React 组合模式规范，处理布尔 props 膨胀、组件库设计 |
 | docling | 把 PDF、DOCX、PPTX、XLSX 等文档转换成 Markdown |
 | docx | 创建、读取、编辑 Word 文档，含批注与修订 |

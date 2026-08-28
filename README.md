@@ -15,6 +15,7 @@
 | drawio-skill | 绘制流程图、架构图、UML、网络拓扑等各类图并导出 |
 | firecrawl | 通过 Firecrawl CLI 检索网页、提取内容、下载站点 |
 | frontend-design | 前端视觉设计指引，避免模板化审美 |
+| hatch-pet | 创建 Codex 兼容的动画宠物精灵图集，含校验、视觉 QA 与打包 |
 | mcp-builder | 构建 Python 或 TypeScript 的 MCP 服务器 |
 | no-negative-echo | 交付收口，防止被否方案残留进标题、commit 和 PR |
 | playwright-cli | 用 Playwright 自动化浏览器操作与页面测试 |

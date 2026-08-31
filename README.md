@@ -1,4 +1,4 @@
-**skills 是一套安装在 `~/.agents/skills` 的 Agent Skills 集合，覆盖文档处理、浏览器自动化、网络检索、前端规范和 Dart/Flutter 开发，供 TRAE 等 Agent 宿主按需调用。**
+**skills 是一套安装在 `~/.agents/skills` 的 Agent Skills 集合，覆盖文档处理、浏览器自动化、网络检索、前端规范、工程协作和 Dart/Flutter 开发，供 Agent 宿主按需调用。**
 
 [技能清单](#技能清单) · [安装](#安装) · [问题反馈](https://github.com/zhouycheng/skills/issues)
 
@@ -10,19 +10,35 @@
 |---|---|
 | browser-use | 通过 CDP 直接控制浏览器，做自动化、抓取、测试和截图 |
 | chatgpt-imagegen | 用 ChatGPT 订阅生成图片与 GIF/WebP 动图，无需 API key |
+| check-impl-against-spec | 对照规格检查 Pull Request 实现，并记录重要不一致 |
+| codex-with-chatgpt | 用 ChatGPT 辅助规划和评审 Codex 编码任务 |
 | composition-patterns | React 组合模式规范，处理布尔 props 膨胀、组件库设计 |
+| council | 调度多个模型或 Agent 从不同角度调查问题并综合建议 |
+| cross-critique | 让多个独立方案相互评议，深化有争议的技术决策 |
 | docling | 把 PDF、DOCX、PPTX、XLSX 等文档转换成 Markdown |
 | docx | 创建、读取、编辑 Word 文档，含批注与修订 |
 | drawio-skill | 绘制流程图、架构图、UML、网络拓扑等各类图并导出 |
 | firecrawl | 通过 Firecrawl CLI 检索网页、提取内容、下载站点 |
 | frontend-design | 前端视觉设计指引，避免模板化审美 |
 | hatch-pet | 创建 Codex 兼容的动画宠物精灵图集，含校验、视觉 QA 与打包 |
+| implement-specs | 根据已批准的产品与技术规格实现功能并保持规格同步 |
 | mcp-builder | 构建 Python 或 TypeScript 的 MCP 服务器 |
 | no-negative-echo | 交付收口，防止被否方案残留进标题、commit 和 PR |
 | playwright-cli | 用 Playwright 自动化浏览器操作与页面测试 |
 | pptx | 创建、读取、编辑 PowerPoint 演示文稿 |
+| pr-walkthrough | 生成可交互的 Pull Request 系统、数据流和依赖关系导览 |
+| readout | 将调查结果整理为可长期阅读和分享的 HTML 文档 |
 | react-best-practices | React/Next.js 性能优化规范（Vercel 工程实践） |
+| research | 委派多 Agent 调查复杂问题，并返回精炼结论与证据 |
+| resolve-merge-conflicts | 提取并解决 Git 合并、变基或拣选提交中的冲突 |
+| respond-to-pr-comments-in-blocklist | 逐条处理 Pull Request 评论，并在确认后回复和解决线程 |
+| review-pr | 审查 Pull Request 差异并生成结构化 review.json |
 | skill-creator | 创建、改进和评测 Skill 本身 |
+| skill-doctor | 根据真实对话评估 Agent Skills，并提出具体改进建议 |
+| spec-driven-implementation | 以产品规格和技术规格驱动重大功能的实现流程 |
+| update-skill | 创建、更新和完善本仓库中的 SKILL.md |
+| validate-changes-match-specs | 验证分支或 Pull Request 是否符合产品、技术与安全规格 |
+| write-pr-description | 编写 Pull Request 描述、审查重点和推荐阅读顺序 |
 | xlsx | 创建和处理电子表格，含公式、图表与数据清洗 |
 
 ### Dart

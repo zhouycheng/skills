@@ -1,4 +1,4 @@
-**skills 是一套安装在 `~/.agents/skills` 的 Agent Skills 集合，覆盖文档处理、浏览器自动化、网络检索、前端规范、工程协作和 Dart/Flutter 开发，供 Agent 宿主按需调用。**
+**skills 是一套安装在 `~/.agents/skills` 的 Agent Skills 集合，覆盖文档处理、浏览器自动化、网络检索、前端设计与视觉生成、工程协作和 Dart/Flutter 开发，供 Agent 宿主按需调用。**
 
 [技能清单](#技能清单) · [安装](#安装) · [问题反馈](https://github.com/zhouycheng/skills/issues)
 
@@ -19,7 +19,7 @@
 | docx | 创建、读取、编辑 Word 文档，含批注与修订 |
 | drawio-skill | 绘制流程图、架构图、UML、网络拓扑等各类图并导出 |
 | firecrawl | 通过 Firecrawl CLI 检索网页、提取内容、下载站点 |
-| frontend-design | 前端视觉设计指引，避免模板化审美 |
+| full-output-enforcement | 强制完整输出，杜绝占位符和省略式截断 |
 | hatch-pet | 创建 Codex 兼容的动画宠物精灵图集，含校验、视觉 QA 与打包 |
 | implement-specs | 根据已批准的产品与技术规格实现功能并保持规格同步 |
 | mcp-builder | 构建 Python 或 TypeScript 的 MCP 服务器 |
@@ -29,6 +29,8 @@
 | pr-walkthrough | 生成可交互的 Pull Request 系统、数据流和依赖关系导览 |
 | readout | 将调查结果整理为可长期阅读和分享的 HTML 文档 |
 | react-best-practices | React/Next.js 性能优化规范（Vercel 工程实践） |
+| rename-all-threads | 批量整理 Codex 会话标题，确认后统一重命名 |
+| rename-current-thread | 把当前 Codex 会话标题规范为统一格式 |
 | research | 委派多 Agent 调查复杂问题，并返回精炼结论与证据 |
 | resolve-merge-conflicts | 提取并解决 Git 合并、变基或拣选提交中的冲突 |
 | respond-to-pr-comments-in-blocklist | 逐条处理 Pull Request 评论，并在确认后回复和解决线程 |
@@ -40,6 +42,24 @@
 | validate-changes-match-specs | 验证分支或 Pull Request 是否符合产品、技术与安全规格 |
 | write-pr-description | 编写 Pull Request 描述、审查重点和推荐阅读顺序 |
 | xlsx | 创建和处理电子表格，含公式、图表与数据清洗 |
+
+### 前端设计
+
+| 技能 | 用途 |
+|---|---|
+| brandkit | 生成品牌手册图板、logo 系统与视觉识别方案 |
+| design-taste-frontend | 解读需求推断设计方向，产出反模板化的前端界面 |
+| design-taste-frontend-v1 | design-taste-frontend 的 v1 兼容版本，保留原有行为 |
+| frontend-design | 前端视觉设计指引，避免模板化审美 |
+| gpt-taste | 高端 UX/UI 与 GSAP 滚动动效工程，强化版式与布局变化 |
+| high-end-visual-design | 按高端设计机构的字体、间距、阴影与动效标准做网页 |
+| image-to-code | 先生成并分析设计图，再按图实现高还原度网页 |
+| imagegen-frontend-mobile | 生成 iOS/Android App 界面概念图与多屏流程 |
+| imagegen-frontend-web | 为落地页每个版块单独生成设计参考图 |
+| industrial-brutalist-ui | 工业粗野主义界面，瑞士排版融合军事终端美学 |
+| minimalist-ui | 极简编辑风界面，暖色单色系与扁平 bento 网格 |
+| redesign-existing-projects | 审计既有网站并按高端标准重设计，不破坏功能 |
+| stitch-design-taste | 为 Google Stitch 生成 DESIGN.md 语义设计系统 |
 
 ### Dart
 

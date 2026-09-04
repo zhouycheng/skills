@@ -1,0 +1,7 @@
+interface:
+  display_name: "Rename Current Thread"
+  short_description: "Rename only the active Codex task"
+  default_prompt: "Use $rename-current-thread to rename only the current task with MMDD｜类型｜主题."
+
+policy:
+  allow_implicit_invocation: false

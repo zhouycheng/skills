@@ -1,0 +1,7 @@
+interface:
+  display_name: "Rename All Threads"
+  short_description: "Plan and confirm a batch title update"
+  default_prompt: "Use $rename-all-threads to preview a batch title plan, then confirm the exact PLAN-... before writing."
+
+policy:
+  allow_implicit_invocation: false

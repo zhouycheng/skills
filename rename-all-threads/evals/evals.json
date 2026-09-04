@@ -1,0 +1,29 @@
+{
+  "skill_name": "rename-all-threads",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "请把我现在的全部 Codex 会话标题整理成 MMDD｜类型｜主题，先给我候选和计划编号，不要立即改名。",
+      "expected_output": "调用 list_threads，必要时读取线程上下文，生成候选表和 PLAN-... 编号；预览阶段不调用 set_thread_title。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "确认执行刚才的 PLAN-20260904-120000，请按候选逐条修改会话标题。",
+      "expected_output": "重新核对线程和当前标题后，逐条调用 set_thread_title，只写入仍匹配计划且符合 MMDD｜类型｜主题 的候选，并汇报成功、跳过和失败数量。",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "批量改名 confirm，但我没有计划编号。",
+      "expected_output": "不读取或修改任何线程，要求提供明确的 PLAN-... 编号。",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "请批量改名 confirm PLAN-123 extra，直接执行就行。",
+      "expected_output": "识别为非法参数并保持无操作，不调用标题写入工具。",
+      "files": []
+    }
+  ]
+}

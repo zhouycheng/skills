@@ -22,11 +22,31 @@ whatever data it needs by itself.
 
 1. NEVER paste file contents, diffs, or logs into ChatGPT. ChatGPT reads them through MCP.
 2. NEVER show the user technical internals (MCP, OAuth, PKCE, tunnel, ports, localhost).
-   Speak in terms of "连接 ChatGPT / 安全连接 / 配对".
+   Speak in terms of "连接 ChatGPT / 安全连接 / 配对". The only exception is the
+   **guided manual ChatGPT setup** below: expose only the exact settings
+   field labels/values the user must enter, without explaining internals.
 3. The pairing code is the ONLY credential you may ever type into a browser.
    Never touch OAuth tokens, cookies, or session storage.
 4. If something fails, run `c2c doctor` and repair silently. Only involve the user
-   for logins, CAPTCHA, 2FA, or explicit consent screens — and then give them ONE action.
+   for logins, CAPTCHA, 2FA, explicit consent screens, or **guided manual
+   ChatGPT setup** below — and then give them ONE action.
+   Before the first ChatGPT connection on this machine, `c2c prefs --json`:
+   - `setupMode` missing: tell the user exactly `setupChoicePrompt`, wait for
+     「1」or「2」, then `c2c prefs set --setup-mode auto|manual --json`.
+     Do not start ChatGPT configuration until they answer. Do not guess.
+   - `setupMode` is `manual`: skip automatic ChatGPT settings. Use guided
+     manual from the start (chosen, not a failure).
+   - `setupMode` is `auto`: automatic browser setup. Two explicit failures of
+     the same configuration step after repair then enter guided manual.
+     A browser/js timeout, a page still loading/generating, or waiting for
+     user login/2FA does NOT count as a failure. Do not change the saved
+     `setupMode` when falling back.
+   `developerModeEnabled: true` means skip `#settings/Security` until a
+   connector create fails because developer mode is required. Then open
+   that page, enable it, and `c2c prefs set --developer-mode --json`.
+   These prefs are for this machine, not per workspace. Do not ask again
+   on reconnect or a second repo. A new computer (empty prefs) asks/checks
+   once.
 5. ALWAYS use the built-in in-app browser (iab) for every ChatGPT step.
    Follow **In-app browser (ChatGPT)** below. NEVER Computer Use (no
    screenshot-click). NEVER launch or control a third-party/external browser
@@ -68,6 +88,9 @@ whatever data it needs by itself.
    - `chatgptRepair.needed` is true (fix the connector first, then doctor again)
    - `namedRepair.needed` is true (user must login to Cloudflare, then doctor again.
      Do not Delete the ChatGPT connector — the address did not change)
+   - `report.bridge` says 状态无法确认: the local bridge may still be running.
+     Do not `c2c start`, do not Delete the connector, do not treat it as
+     `chatgptRepair`. Wait and run doctor again.
    A ChatGPT-side 401 after a sent message is different: repair then, do not
    treat it as permission to skip this gate next time.
 
@@ -96,6 +119,7 @@ that close the tab, hide the window, or stall on the settings page.
 
 4. **URLs only** (same tab, `goto` — never hunt menus):
    - 开发人员模式: `https://chatgpt.com/#settings/Security`
+     (skip when `c2c prefs --json` has `developerModeEnabled: true`)
    - 插件总管: `https://chatgpt.com/plugins`
    - 加插件: `https://chatgpt.com/plugins#settings/Connectors?create-connector=true&redirectAfter=%2Fplugins`
    - 新对话 (long-chat only, and only if no saved chat): `https://chatgpt.com/`
@@ -141,9 +165,11 @@ that close the tab, hide the window, or stall on the settings page.
 
 ## Locations
 
-- The codex-with-chatgpt checkout lives at: `/Users/leftzhou/codex-with-chatgpt`
-- CLI: run `node /Users/leftzhou/codex-with-chatgpt/bin/c2c.js <command>`
-  (or `c2c <command>` if globally linked). All commands support `--json` for parsing.
+- The codex-with-chatgpt checkout lives at: `<ACTUAL_CHECKOUT_PATH>`
+  (installer/update MUST replace this line in the installed Skill with the user's actual checkout path.)
+- CLI: let `<checkout>` mean the path on the previous line; run
+  `node "<checkout>/bin/c2c.js" <command>` (or `c2c <command>` if globally linked).
+  All commands support `--json` for parsing.
 - If the checkout has no `node_modules` or no `dist/`, first run
   `corepack pnpm install && corepack pnpm build` inside it.
 - Always pass `-w <workspace root>` (the project the user is working on, NOT the c2c repo).
@@ -217,10 +243,26 @@ Speak only of 临时地址 / 固定域名 / 登录 Cloudflare.
    `connectorName` is this workspace's plugin title (legacy installs stay
    `Codex with ChatGPT`; additional workspaces get `Codex with ChatGPT · <name>`).
    Pairing codes expire in ~5 minutes: run `c2c pair --json` for a fresh one if you're slow.
-4. Open ChatGPT on the ONE iab tab (see **In-app browser**). Foreground +
+4. `c2c prefs --json` (this machine, not this workspace).
+   - If `setupMode` is null: tell the user exactly `setupChoicePrompt`. Wait
+     for「1」or「2」. Then `c2c prefs set --setup-mode auto` or `--setup-mode manual`.
+     Do not open ChatGPT settings and do not start automatic configuration
+     until they answer. Do not default to auto.
+   - If they later ask to switch: same `c2c prefs set --setup-mode` command.
+     Do not re-ask on a later workspace or on reconnect.
+   - `setupMode: "manual"`: skip step 5's automatic ChatGPT settings. Go to
+     **Guided manual ChatGPT setup** (chosen). Opening line:
+     `接下来用手动教学配置。一次只需要做一个操作。`
+     Do not say 自动配置没有成功.
+   - `setupMode: "auto"`: continue with step 5. Keep the two-failure fallback.
+5. Open ChatGPT on the ONE iab tab (see **In-app browser**). Foreground +
    markHandoff immediately. Same tab, `goto` only:
-   - 开发人员模式: `https://chatgpt.com/#settings/Security`
-     Enable 开发人员模式 ("Developer mode") if it is off.
+   - 开发人员模式: skip `https://chatgpt.com/#settings/Security` when
+     `developerModeEnabled` is true. Otherwise open it, enable 开发人员模式
+     ("Developer mode") if it is off, then `c2c prefs set --developer-mode`.
+     Never record it as off. If creating the connector later says developer
+     mode is required, open this page, enable it, save `--developer-mode`,
+     and retry create — do not skip that recovery.
    - 已有该 `connectorName`: `https://chatgpt.com/plugins` — Delete it (never
      Reconnect). Then `goto` the 加插件 URL below.
    - 还没有 / 刚删掉: `https://chatgpt.com/plugins#settings/Connectors?create-connector=true&redirectAfter=%2Fplugins`
@@ -235,7 +277,7 @@ Speak only of 临时地址 / 固定域名 / 登录 Cloudflare.
      Fill the known form in one script when you can. Then Connect / Authorize
      and type the pairing code. As soon as it shows Connected / authorized /
      pairing accepted, continue — do NOT wait for 8 tools on this page.
-5. Same tab: open the first C2C chat per **Conversation management**
+6. Same tab: open the first C2C chat per **Conversation management**
    (Project collection for a new workspace; `https://chatgpt.com/` only
    in long-chat). Confirm Chat mode per **In-app browser** §7 (if it is Work,
    open a new Chat conversation instead). Send the boot prompt from
@@ -244,7 +286,7 @@ Speak only of 临时地址 / 固定域名 / 登录 Cloudflare.
    Confirm the reply matches `workspaceName` (wait per **In-app browser** §8).
    Only then save the chat URL with `c2c session set` (see Conversation
    management). If the name does not match, do not save. markDeliverable.
-6. Report to the user exactly in this shape (no internals):
+7. Report to the user exactly in this shape (no internals):
 
 ```
 Codex with ChatGPT
@@ -260,6 +302,47 @@ Ready.
 
 If a login wall appears (ChatGPT, Cloudflare): stop, tell the user the ONE thing
 to do ("请登录 ChatGPT，完成后告诉我'好了'"), then continue.
+
+### Guided manual ChatGPT setup
+
+Enter this path when `setupMode` is `manual` (chosen at the start), or when
+automatic ChatGPT browser configuration fails twice at the same explicit
+setup/reconnect step after `c2c doctor` / repair. Do NOT enter the failure
+path for a browser/js timeout without a visible error, a page that is
+still loading/generating, or while waiting for login / 2FA / CAPTCHA.
+A chosen manual path does not wait for those two failures.
+
+Stop automating ChatGPT settings. Keep the current local C2C state and the
+current `mcpUrl`, `pairingCode`, `workspaceName`, and `connectorName`. Do not
+silently fall back to Codex-only execution and do not permanently disable C2C.
+Do not change the saved `setupMode` when this is a failure fallback.
+
+Opening line:
+
+- Chosen (`setupMode: "manual"`): `接下来用手动教学配置。一次只需要做一个操作。`
+- Failure fallback: `自动配置没有成功，我来带你手动完成。一次只需要做一个操作。`
+
+Then guide ONE action at a time, waiting for the user to say「好了」before the
+next action:
+
+1. If `developerModeEnabled` is not true: ask them to open
+   `https://chatgpt.com/#settings/Security` and enable 开发人员模式. After they
+   say「好了」, `c2c prefs set --developer-mode`. If it is already remembered,
+   skip this step.
+2. Ask them to open `https://chatgpt.com/plugins`. If the exact `connectorName`
+   exists, delete only that connector. Never ask them to touch another workspace's connector.
+3. Ask them to open
+   `https://chatgpt.com/plugins#settings/Connectors?create-connector=true&redirectAfter=%2Fplugins`
+   and create the exact `connectorName` with:
+   - Description: `Securely connect ChatGPT to the current Codex workspace for planning and review.`
+   - Server URL: the current `mcpUrl`
+   - Authentication: OAuth
+4. Ask them to Connect / Authorize and enter the current pairing code. If it
+   expired, run `c2c pair --json` and give them only the fresh pairing code.
+5. When they report Connected / authorized / pairing accepted, resume the normal
+   setup/reconnect flow at its ChatGPT verification step. If automatic browser
+   verification then hits the same explicit failure twice, stop and report the
+   exact failed step; do not loop indefinitely and do not continue without C2C.
 
 ## Conversation management
 
@@ -282,7 +365,10 @@ ONE ChatGPT conversation per workspace. Same as before.
   `c2c session set -w <ws> --mode long-chat --url <url> --title "C2C <workspace name>"`.
   If the name does not match, do not overwrite a previously saved URL.
 - **Update it**: after each EXECUTED/DONE,
-  `c2c session set -w <ws> --task <id> --iteration <n> --state <STATE>`.
+  `c2c session set -w <ws> --task <id> --iteration <n> --state <STATE>`
+  plus checkpoint flags from the coding workflow (`--protocol-state`,
+  `--waiting-for`, `--goal`, `--next-step`, `--known-issues`, or
+  `--clear-checkpoint` on DONE). Do not put logs or diffs in those fields.
 - **Switch it** ONLY when (a) the user asks for a new chat, (b) the current
   chat visibly lags, or (c) this conversation is Work. Then:
   1. Same iab tab: `goto` `https://chatgpt.com/`, confirm Chat mode
@@ -290,9 +376,11 @@ ONE ChatGPT conversation per workspace. Same as before.
   2. Send a HANDOFF (`docs/protocol.md`) — goal, progress, state, issues,
      next step. Never paste files.
   3. workspace_info check; only then `c2c session set --url`. On failure,
-     leave the old URL unchanged.
-- Saved chat 404s: treat as a switch. Reconstruct HANDOFF from `c2c session`
-  and recent `execution_summary`.
+     leave the old saved URL unchanged.
+- Saved chat 404s: treat as a switch. Reconstruct HANDOFF from
+  `session.checkpoint` (goal, progress, issues, next step). If there is no
+  checkpoint, use `task` / `iteration` / `lastState` and `execution_summary`
+  metadata only. Never paste logs or output bodies.
 
 ### project (new workspaces)
 
@@ -328,8 +416,8 @@ Also offer「继续用长对话」. If they pick long-chat:
 If the collection 404s or the new chat is not inside the Project, same choice.
 
 **Saved chat 404s** (this thread): `goto` the collection, open a new chat
-there, boot + HANDOFF + workspace_info, then save the new chat URL. Keep
-`--project-url`.
+there, boot + HANDOFF from `session.checkpoint` (no logs) + workspace_info,
+then save the new chat URL. Keep `--project-url`.
 
 ### Bind Project (user creates the collection once)
 
@@ -377,9 +465,11 @@ When you call tools, use ONLY that connector. Do not use any other
 Codex with ChatGPT connector. If workspace_info names a different
 workspace, stop. Do not plan. Do not use this Project's memory.
 
-Read code, git, and diffs through that connector. Never ask anyone to
-paste file bodies, diffs, or logs. Never upload the repo into this
-Project's files or sources.
+Read code, git, diffs, and any released command output through that
+connector. Never ask anyone to paste file bodies, diffs, or logs. After
+EXECUTED, call execution_output (list, then read) when a readable item
+exists; if status is restricted, review from git instead. Never upload
+the repo into this Project's files or sources.
 
 When facts conflict, trust this order:
 1. Current code from the connector
@@ -396,7 +486,10 @@ no 40-step epics. Use C2C control messages.
 
 ## Workflow: coding task（"使用 Codex with ChatGPT 完成 XXX"）
 
-Protocol states: INIT → PLAN → EXECUTING → EXECUTED → REVIEW → (PLAN | DONE | BLOCKED).
+Protocol states sent to ChatGPT: INIT → PLAN → EXECUTING → EXECUTED → REVIEW → (PLAN | DONE | BLOCKED).
+Local checkpoint states (session only, never a ChatGPT `STATE:` line):
+`INIT`, `PLAN_RECEIVED`, `EXECUTING`, `EXECUTED_LOCAL`, `EXECUTED_SENT`, `DONE`, `BLOCKED`.
+Do not invent `STATE: RESUME`. If the original chat is gone, send HANDOFF.
 All control messages start with `[C2C]`. Keep Codex→ChatGPT messages under 1 KB.
 ChatGPT's replies are expected to be substantive (see step 3). Docs: `docs/protocol.md`.
 
@@ -409,7 +502,8 @@ ChatGPT's replies are expected to be substantive (see step 3). Docs: `docs/proto
    again. If `chatgptRepair.needed` is true, tell the user `chatgptRepair.userMessage`
    (one paragraph, no internals), run **Workflow: reconnect after address
    reclaim**, then doctor again and only continue when the gate is green.
-   Generate task id: `c2c_` + 4 random hex chars.
+   Generate task id: `c2c_` + 4 random hex chars — unless a checkpoint already
+   has one (reuse that id; do not mint a second task).
 1. `c2c session -w <workspace> --json`. Open ChatGPT on the same iab tab
    per **Conversation management** for `conversation.mode` (foreground +
    markHandoff). long-chat: saved chat, or `https://chatgpt.com/` if none.
@@ -421,7 +515,26 @@ ChatGPT's replies are expected to be substantive (see step 3). Docs: `docs/proto
    before saving the session URL. Do not use the browser to re-read code MCP
    already provides. After sending a control message, wait per
    **In-app browser** §8.
-2. Send INIT with the user's goal:
+
+   **Resume from `session.checkpoint` before any INIT.** Missing checkpoint
+   (legacy session): continue as a normal new/continued loop. A browser/js
+   timeout is not a lost task — claim the original tab; do not INIT, re-run,
+   or resend EXECUTED just because a wait timed out.
+   - `EXECUTED_SENT` + `waitingFor=GPT_REVIEW`: do not INIT, do not re-run,
+     do not resend EXECUTED. Stay on the saved chat and wait for review. If
+     that chat 404s: HANDOFF from checkpoint fields (no logs), then wait.
+   - `EXECUTED_LOCAL`: local work is done; only send EXECUTED (record first
+     if this iteration has no record yet). Do not re-run.
+   - `EXECUTING`: not finished. Continue the current PLAN if you still have
+     it; otherwise HANDOFF and ask ChatGPT to restate the last PLAN. Do not
+     treat it as done and do not INIT a new task.
+   - `PLAN_RECEIVED`: execute that plan. Do not INIT.
+   - `INIT` / `waitingFor=GPT_PLAN`: claim the tab and wait. Do not resend INIT.
+   - `DONE`: summarize to the user if needed; `c2c session set --clear-checkpoint`.
+   - `BLOCKED`: surface ChatGPT's reason; do not INIT.
+   Never re-pair, never recreate the connector, and never rewrite Project
+   instructions just to resume.
+2. Send INIT with the user's goal (skip when the checkpoint says not to):
 
 ```
 [C2C]
@@ -437,6 +550,8 @@ Inspect the connected workspace through the Codex with ChatGPT MCP connector.
 Produce a C2C PLAN message.
 ```
 
+   Then:
+   `c2c session set -w <ws> --task <id> --iteration 0 --state INIT --protocol-state INIT --waiting-for GPT_PLAN --goal "<short goal>" --next-step "wait for PLAN"`
 3. Wait for ChatGPT's `STATE: PLAN` reply (**In-app browser** §8 — short DOM
    checks, same tab; do not treat a 5-minute browser timeout as failure).
    Read GOAL/ACTIONS/TESTS/SUCCESS_CRITERIA.
@@ -444,11 +559,25 @@ Produce a C2C PLAN message.
    suggestions (which file, what to change, why). If the reply is a bare
    one-liner with no rationale or file-level guidance, ask once:
    "Please expand the plan with rationale and concrete per-file suggestions."
+   Then:
+   `c2c session set -w <ws> --protocol-state PLAN_RECEIVED --waiting-for none --next-step "execute PLAN"`
 4. Execute the plan yourself with your own harness (your tools, your judgment;
    ChatGPT does not micro-manage tool calls).
-5. Record the execution so ChatGPT can read it via MCP:
+   Before you start:
+   `c2c session set -w <ws> --protocol-state EXECUTING --waiting-for none --next-step "finish PLAN then record"`
+5. Record the execution so ChatGPT can read it via MCP. Metadata always:
    `c2c record -w <ws> --task c2c_f81a --iteration 1 --changed-files "src/a.ts,src/b.ts" --tests "27 passed" --exit-status ok`
-6. Send EXECUTED (no diffs, no logs):
+   If this iteration ran a **test / build / lint / typecheck** command, also
+   pass that command's output. Write stdout/stderr to a local temp file first,
+   then:
+   `c2c record … --command "pnpm test" --output-file <temp> --exit-code <n>`
+   Record both success and failure. Do not record shell history, `.env`,
+   keys, or unrelated dumps. Never paste that file (or any log) into ChatGPT.
+   If the CLI says the output was not released, still send EXECUTED; ChatGPT
+   reviews from git. Then:
+   `c2c session set -w <ws> --iteration 1 --state EXECUTED --protocol-state EXECUTED_LOCAL --waiting-for none --next-step "send EXECUTED"`
+6. Send EXECUTED (no diffs, no logs). Tell ChatGPT to use MCP, including
+   `execution_output` when a readable item exists:
 
 ```
 [C2C]
@@ -466,15 +595,21 @@ TESTS:
 27 passed
 
 Please independently inspect the workspace and current git diff through MCP.
+If execution_output lists a readable item for this iteration, list then read it.
+If status is restricted, ignore it and review from git_diff.
 ```
 
-7. ChatGPT reviews via MCP (git_diff, read_file, test_status) and replies
-   DONE / PLAN (next iteration) / BLOCKED.
+   Then:
+   `c2c session set -w <ws> --protocol-state EXECUTED_SENT --waiting-for GPT_REVIEW --next-step "wait for PLAN or DONE"`
+7. ChatGPT reviews via MCP (`git_diff`, `read_file`, `test_status`,
+   `execution_output`) and replies DONE / PLAN (next iteration) / BLOCKED.
 8. Loop. Respect maxIterations (`.c2c.json`, default 12). At the limit, pause and ask
    the user: "已完成 12 轮协作，仍有未解决问题，是否继续？"
 9. On DONE: summarize the result to the user in plain language.
+   `c2c session set -w <ws> --state DONE --clear-checkpoint`
 10. On BLOCKED: read ChatGPT's reason, fix what you can, or surface the single
     decision the user must make.
+    `c2c session set -w <ws> --protocol-state BLOCKED --waiting-for USER --known-issues "<short reason>"`
 
 ## Workflow: disconnect（"断开 ChatGPT"）
 
@@ -497,9 +632,13 @@ the previous public address is gone. Doctor already started a new one.
    ask them to click around ChatGPT unless a login wall appears. Do not open
    the C2C chat and do not send `[C2C]` until this repair finishes and a
    follow-up doctor is green. Never "try a message first to see if it works".
+   Reuse `c2c prefs --json`. Do not re-ask setup mode. If `setupMode` is
+   `manual`, use **Guided manual ChatGPT setup** (chosen) instead of automating.
 2. Same one iab tab as setup (foreground + markHandoff). Settings URLs only
    until Connected — never hunt menus:
-   - 开发人员模式: `https://chatgpt.com/#settings/Security`
+   - 开发人员模式: skip `https://chatgpt.com/#settings/Security` when
+     `developerModeEnabled` is true. If create/delete then says developer
+     mode is required, open it, enable, `c2c prefs set --developer-mode`.
    - 插件总管（只用来 Delete）: `https://chatgpt.com/plugins`
    - 加插件（Delete 之后必走）: `https://chatgpt.com/plugins#settings/Connectors?create-connector=true&redirectAfter=%2Fplugins`
 3. Operate ONLY on `chatgptRepair.connectorName`. Never touch another
@@ -548,6 +687,7 @@ the previous public address is gone. Doctor already started a new one.
 | Tunnel dead / URL unreachable / 全关掉后连接失效 | `c2c doctor` → if `namedRepair.needed`, login to Cloudflare and doctor again (do not Delete). If `chatgptRepair.needed`, tell the user the message, then **Delete** THIS workspace's connector only (`connectorName`) and create it again. Never Reconnect. |
 | ChatGPT says tool call failed / 401 | token expired or revoked → re-pair (new pairing code + authorize) |
 | Pairing code rejected/expired | `c2c pair --json` for a fresh code |
+| Same explicit ChatGPT setup/reconnect browser configuration step fails twice after repair | Stop automating ChatGPT settings and use **Guided manual ChatGPT setup fallback**. Do not count browser/js timeout, loading/generating, or login/2FA waiting as failures. |
 | Port conflict | handled automatically; never surface to the user |
 | Every new chat “repairs” / cannot write the log or settings directory | `c2c sandbox-allow --json` (once). Do not ask the user. |
 | cloudflared missing | install it yourself (brew/winget), then retry |

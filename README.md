@@ -16,11 +16,10 @@
 | council | 调度多个模型或 Agent 从不同角度调查问题并综合建议 |
 | cross-critique | 让多个独立方案相互评议，深化有争议的技术决策 |
 | docling | 把 PDF、DOCX、PPTX、XLSX 等文档转换成 Markdown |
-| docx | 创建、读取、编辑 Word 文档，含批注与修订 |
 | drawio-skill | 绘制流程图、架构图、UML、网络拓扑等各类图并导出 |
 | firecrawl | 通过 Firecrawl CLI 检索网页、提取内容、下载站点 |
 | full-output-enforcement | 强制完整输出，杜绝占位符和省略式截断 |
-| hatch-pet | 创建 Codex 兼容的动画宠物精灵图集，含校验、视觉 QA 与打包 |
+| grill-me | 对想法、方案或决策做逐题压力测试，输出决策简报 |
 | implement-specs | 根据已批准的产品与技术规格实现功能并保持规格同步 |
 | mcp-builder | 构建 Python 或 TypeScript 的 MCP 服务器 |
 | no-negative-echo | 交付收口，防止被否方案残留进标题、commit 和 PR |
@@ -41,7 +40,6 @@
 | update-skill | 创建、更新和完善本仓库中的 SKILL.md |
 | validate-changes-match-specs | 验证分支或 Pull Request 是否符合产品、技术与安全规格 |
 | write-pr-description | 编写 Pull Request 描述、审查重点和推荐阅读顺序 |
-| xlsx | 创建和处理电子表格，含公式、图表与数据清洗 |
 
 ### 前端设计
 

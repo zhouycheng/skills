@@ -4,13 +4,13 @@
     {
       "id": 1,
       "prompt": "请把我现在的全部 Codex 会话标题整理成 MMDD｜类型｜主题，先给我候选和计划编号，不要立即改名。",
-      "expected_output": "调用 list_threads，必要时读取线程上下文，生成候选表和 PLAN-... 编号；预览阶段不调用 set_thread_title。",
+      "expected_output": "只调用 list_threads 获取未归档任务，必要时读取线程上下文，置顶任务按内容判断是否准确，其他任务按 MMDD｜类型｜主题 生成候选表和 PLAN-... 编号；预览阶段不调用 set_thread_title，也不调用 list_archived_threads。",
       "files": []
     },
     {
       "id": 2,
       "prompt": "确认执行刚才的 PLAN-20260904-120000，请按候选逐条修改会话标题。",
-      "expected_output": "重新核对线程和当前标题后，逐条调用 set_thread_title，只写入仍匹配计划且符合 MMDD｜类型｜主题 的候选，并汇报成功、跳过和失败数量。",
+      "expected_output": "重新核对未归档线程和当前标题后，逐条调用 set_thread_title；准确的置顶标题保持不变，其他需要改名的任务写入符合 MMDD｜类型｜主题 的候选，并汇报成功、跳过和失败数量。",
       "files": []
     },
     {

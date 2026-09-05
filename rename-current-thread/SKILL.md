@@ -1,6 +1,6 @@
 ---
 name: rename-current-thread
-description: "Use this skill whenever the user explicitly asks to rename, standardize, normalize, or整理 the title of the current Codex task or conversation, including an explicit rename-current-thread invocation. Read the current task context, produce one exact MMDD｜类型｜主题 title, and write it through mcp__codex_app__set_thread_title. This is an explicit, single-task operation and must never rename other tasks or run after ordinary task completion."
+description: "Use this skill whenever the user explicitly asks to rename, standardize, normalize, or整理 the title of the current Codex task or conversation, including an explicit rename-current-thread invocation. Read the current task context; preserve an accurate pinned title, otherwise produce one exact MMDD｜类型｜主题 title and write it through mcp__codex_app__set_thread_title. This is an explicit, single-task operation and must never rename other tasks or run after ordinary task completion."
 compatibility: "Requires the Codex App thread-title tool; it has no dependency on local hooks, configuration files, state files, or repository files."
 ---
 
@@ -14,6 +14,9 @@ Use this skill only after the user has explicitly requested a title change for t
 - Do not enumerate, inspect, or modify other tasks.
 - Do not call `mcp__codex_app__list_threads`, `mcp__codex_app__list_archived_threads`, or any other cross-task tool.
 - Do not infer a rename request from a normal task, a discussion about titles, or the end of a task. This skill runs only for an explicit request.
+- The current task is the only target and is necessarily unarchived while this skill is running. Do not enumerate archived tasks or inspect any other task.
+- If the runtime exposes that the current task is pinned, first judge whether its existing title accurately describes the current conversation. Keep it unchanged when it is accurate, even if it does not use the standard format; otherwise update it with the Title Contract.
+- If pinned state is not exposed, apply the standard title contract directly.
 
 ## Title Contract
 
@@ -39,7 +42,7 @@ Apply these rules exactly:
 4. Choose exactly one category and one specific topic. Prefer the narrowest description that identifies the deliverable or technical change the user actually requested.
 5. Build the title, then recheck every character against the Title Contract before calling the tool. If the generated title is not compliant, revise it before writing.
 6. Call `mcp__codex_app__set_thread_title` directly for the current task. Omit `threadId` when the tool targets the calling task by default; pass a thread ID only when the runtime explicitly provides the current task's ID.
-7. If the current title is already accurate and compliant, no write is required. Otherwise, do not return only a suggestion or ask for another confirmation: perform the write.
+7. If the current task is pinned and its title is already accurate, no write is required. For an unpinned task, write the standardized title unless it is already accurate and compliant. Do not return only a suggestion or ask for another confirmation: perform the write.
 8. Do not claim success without a successful tool result. If the context cannot support a reliable title or the tool is unavailable, make no write and state the limitation briefly.
 9. After a successful write, report the exact title in one short sentence and stop. Do not start another task or title-maintenance continuation.
 
@@ -60,4 +63,3 @@ Apply these rules exactly:
 0904｜功能｜正在处理用户请求
 0904｜功能｜https://example.com
 ```
-

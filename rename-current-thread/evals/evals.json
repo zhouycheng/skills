@@ -4,19 +4,19 @@
     {
       "id": 1,
       "prompt": "请把当前 Codex 会话的标题按约定重新命名。根据完整上下文判断类型和主题，直接使用当前线程的标题写入工具完成改名。",
-      "expected_output": "只读取当前任务上下文，生成一个严格符合 MMDD｜类型｜主题 的标题，并调用 mcp__codex_app__set_thread_title 写入当前任务。",
+      "expected_output": "只读取当前任务上下文；若当前任务为置顶且原标题按内容准确则不写入，否则按规则生成标题并调用 mcp__codex_app__set_thread_title 写入当前任务。",
       "files": []
     },
     {
       "id": 2,
       "prompt": "当前标题是我之前手工写的描述性标题。现在请执行当前会话改名，把它规范成 MMDD｜类型｜主题。",
-      "expected_output": "把本次明确授权视为改名许可，不因原标题像手工标题而跳过；只处理当前任务并直接写入合规标题。",
+      "expected_output": "把本次明确授权视为改名许可；若当前任务为置顶且原标题按内容准确则保留，否则不因原标题像手工标题而跳过，直接写入合规标题。",
       "files": []
     },
     {
       "id": 3,
       "prompt": "请给当前对话改名，但不要碰其他会话，也不要批量扫描任务列表。",
-      "expected_output": "不调用 list_threads 或 list_archived_threads，只处理当前任务，并通过 set_thread_title 写入严格格式标题。",
+      "expected_output": "不调用 list_threads 或 list_archived_threads，只处理当前任务；当前任务若为置顶且原标题按内容准确则保持不变，否则通过 set_thread_title 写入严格格式标题。",
       "files": []
     }
   ]

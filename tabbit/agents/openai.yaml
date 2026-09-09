@@ -1,0 +1,4 @@
+interface:
+  display_name: "Tabbit"
+  short_description: "Control Tabbit through Browser-owned Playwright tasks"
+  default_prompt: "Use $tabbit and its installed CLI to complete this browser task in an isolated task space owned by Tabbit Browser."

@@ -1,5 +1,5 @@
 ---
-name: image-to-spb
+name: image-to-psb
 description: Reconstructs a supplied image, artwork, or PDF page as a high-fidelity, semantically layered Photoshop PSB. Use when the deliverable must preserve editable content, measured layout, and verified layer structure.
 ---
 

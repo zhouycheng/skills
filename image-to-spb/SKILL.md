@@ -1,52 +1,51 @@
 ---
 name: image-to-spb
-description: Reconstruct a supplied image, artwork, or PDF page as a semantically layered, editable Photoshop PSB and verify the saved layer structure in Photoshop. Use when the requested deliverable is a layered .psb; do not use for ordinary retouching, simple format conversion, or flattened image export.
+description: Reconstructs a supplied image, artwork, or PDF page as a high-fidelity, semantically layered Photoshop PSB. Use when the deliverable must preserve editable content, measured layout, and verified layer structure.
 ---
 
 # Image to Layered PSB
 
-Create a real Photoshop Large Document Format (`.psb`) whose layers have independent editing value. Treat the skill name `image-to-spb` as the user-selected invocation name; the output format is `.psb`.
+Create a Photoshop Large Document Format (`.psb`) with useful, independently editable layers and a composite that closely matches the reference.
 
-## Non-negotiable boundaries
+## Required workflow
 
-- A PSB container does not recover the original design layers. If only a flattened image exists, call the result a semantic reconstruction and state what remains rasterized or inferred.
-- Inspect every file the user explicitly supplied, including a supplied source folder, before choosing a reconstruction method. Prefer usable SVG, AI, EPS, vector PDF, PSD, font, logo, or other source assets over tracing pixels.
-- Preserve the source. Write job scripts, intermediate assets, previews, and deliverables to a task workspace or user-approved output directory; never overwrite the only input.
-- Use meaningful layers: editable text for text, vector or shape content when supported by evidence, masks for separable raster subjects, adjustment layers for global corrections, and raster layers only where reconstruction cannot honestly preserve structure.
-- Do not upload source material, install a plugin, or use a cloud image service unless the user explicitly authorizes it.
-- Do not report completion after merely saving. Reopen the PSB in Photoshop and inspect its actual layer structure.
-
-## Workflow
-
-1. Preflight the supplied material. Record the reference appearance, dimensions, resolution, color mode/profile, intended output use, and available editable sources. Render a reference preview when the input is a PDF or another format that is inconvenient to compare directly.
-2. Choose one route:
-   - **Source-backed reconstruction:** use available vector/editable source objects, preserving their canvas coordinates.
-   - **Flattened-image reconstruction:** separate visible subjects, reconstruct occluded background, recreate text and regular graphics, and retain irreducible details as clearly named raster layers.
-3. Write a layer manifest before building. Each planned layer must represent an object or effect a user may reasonably edit independently. Avoid arbitrary tile layers, duplicated composites, empty groups, and speculative structure.
-4. Prepare full-canvas intermediate assets so every layer shares the same origin and aligns on placement. Keep a hidden `00_原始参考图` layer for flattened-source jobs; for source-backed jobs, keep a reference only when it materially helps verification.
-5. Create a job-specific Photoshop script rather than hard-coding project content into this skill. It should create the document with the confirmed dimensions, resolution, bit depth, and color mode; place assets as Smart Objects or appropriate native layers; create native text and groups; assign stable semantic names; and remove Photoshop's automatic empty base layer.
-6. Run the script inside the installed Photoshop. When desktop computer-use and `@Adobe Photoshop 2026` are available, use them to select the app, inspect the accessibility state, open **File > Scripts > Browse**, choose the job script, and handle dialogs. The computer-use channel starts and observes the work; the Photoshop script performs the document operations.
-7. Save through Photoshop's native Large Document Format path as `.psb`, with layers retained, the color profile embedded, and compatibility enabled when supported. Export a lightweight PNG or JPEG composite preview from a duplicate, never by flattening the deliverable.
-8. Reopen the saved PSB in Photoshop and run the acceptance checks below. Repair and regenerate when any required check fails.
-
-Read [references/reconstruction-and-validation.md](references/reconstruction-and-validation.md) before implementing either reconstruction route or writing the Photoshop validation script.
+1. Inspect every supplied file and identify the richest reliable source for each visible element.
+2. Before editing, complete the element inventory defined in [references/reconstruction-and-validation.md](references/reconstruction-and-validation.md). Record each element's bounds, stacking order, alignment anchors, spacing, processing category, target layer type and name, fidelity requirement, and acceptance check.
+3. Assign every element to exactly one category:
+   - **Photoshop:** native text, regular shapes, color fields, lines, masks, gradients, and deterministic effects.
+   - **Source asset:** supplied vectors, photos, marks, machine-readable codes, and other reliable originals.
+   - **ImageGen:** complex photography, illustration, texture, environmental lighting, and backgrounds that Photoshop cannot reconstruct faithfully with deterministic drawing.
+   - **Protected element:** QR codes, barcodes, logos, seals, signatures, exact data graphics, identity-sensitive people, and other content whose correctness or identity must be preserved. Use a reliable source asset; if none exists, report the unresolved element.
+4. Use full-canvas assets and the reference image's pixel coordinate system. Preserve measured positions, scale, baselines, margins, gaps, alignment axes, perspective, and stacking order.
+5. When the inventory contains an ImageGen element, load and follow `$imagegen`:
+   - Use the built-in edit mode by default. Inspect a local edit target with `view_image` first.
+   - Lock viewpoint, composition, perspective, subject placement, lighting, palette, crop, and negative space.
+   - Request only the routed visual content. Keep text, machine-readable codes, brand marks, watermarks, and extra objects out of the generated asset.
+   - Inspect every result and iterate with one targeted change at a time.
+   - Copy the accepted project asset from the generated-images location into the task workspace.
+   - If the built-in tool is unavailable, explain that CLI fallback requires explicit user confirmation; do not switch automatically.
+6. Build the document in Photoshop with a task-specific script. Create native text and shape layers, place source and generated assets at measured coordinates, use stable semantic layer names, retain a hidden `00_原始参考图`, and remove unexplained empty layers.
+7. Compare the composite against the reference using aligned overlays, rapid visibility toggling, or Difference blending. Correct visible drift in dimensions, placement, spacing, wrapping, perspective, color, and effects.
+8. Save through Photoshop as a layered `.psb`, embed the intended color profile, and export a preview from a duplicate document.
+9. Reopen the PSB in Photoshop and validate document properties, the complete layer tree, element isolation, reference visibility, and composite fidelity against the inventory.
+10. Before delivery, load and follow `$no-negative-echo`. Final names, metadata, previews, manifests, and reports describe the accepted visual structure and observed facts. Keep method provenance only where it is needed to understand authenticity or editability.
 
 ## Required deliverables
 
 - The layered `.psb`.
 - A composite preview.
-- A concise layer manifest naming each layer/group and its editability type.
-- A validation result covering reopen success, document properties, layer structure, and visual fidelity.
-- A limitations note when any element was inferred, font-substituted, background-filled, or left rasterized.
+- Semantic layer manifest.
+- Validation report tied to the element inventory.
+- Concise disclosure of generated, substituted, inferred, or raster-only content when relevant to authenticity or editing.
 
 ## Acceptance gate
 
-Do not claim success unless all of these are observed:
+Completion requires all of the following:
 
 - Photoshop reopens the `.psb` without conversion or repair errors.
-- The document is not flattened and contains no unexplained empty or duplicate layers.
-- Dimensions, resolution, bit depth, color mode, and profile match the confirmed target.
-- Required text is native and editable when it could be reliably reconstructed; substitutions are disclosed.
-- Smart Objects, masks, shape layers, adjustment layers, and raster layers are described accurately rather than all being called editable vectors.
-- Hiding or editing a semantic layer affects only its intended visual component as far as the source permits.
-- The composite preview matches the supplied reference closely enough for its intended use.
+- Dimensions, resolution, bit depth, color mode, and profile match the target.
+- Every inventoried element has the intended content, layer type, position, visibility, and editability.
+- Deterministic elements match the reference in content, alignment, and spacing.
+- Generated elements preserve the required composition, proportions, perspective, lighting, palette, and negative space.
+- Protected elements come from reliable source assets and remain valid.
+- The document contains no unexplained empty, duplicate, or flattened replacement layers.

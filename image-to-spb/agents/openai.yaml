@@ -1,0 +1,4 @@
+interface:
+  display_name: "Image to Layered PSB"
+  short_description: "将图片重建为可编辑分层的 Photoshop PSB 文件"
+  default_prompt: "Use $image-to-spb to reconstruct this image as a verified layered Photoshop PSB."

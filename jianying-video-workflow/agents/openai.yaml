@@ -1,0 +1,4 @@
+interface:
+  display_name: "剪映视频与可编辑工程"
+  short_description: "根据需求和素材完成剪辑、配音、音乐与字幕，交付视频和可编辑剪映工程"
+  default_prompt: "使用 $jianying-video-workflow，根据我的需求和素材制作视频，同时交付可继续编辑的剪映工程。"

@@ -21,11 +21,13 @@
 | full-output-enforcement | 强制完整输出，杜绝占位符和省略式截断 |
 | grill-me | 对想法、方案或决策做逐题压力测试，输出决策简报 |
 | implement-specs | 根据已批准的产品与技术规格实现功能并保持规格同步 |
+| jianying-video-workflow | 制作视频并交付可在剪映专业版继续编辑的工程 |
 | mcp-builder | 构建 Python 或 TypeScript 的 MCP 服务器 |
 | no-negative-echo | 交付收口，防止被否方案残留进标题、commit 和 PR |
 | playwright-cli | 用 Playwright 自动化浏览器操作与页面测试 |
 | pptx | 创建、读取、编辑 PowerPoint 演示文稿 |
 | pr-walkthrough | 生成可交互的 Pull Request 系统、数据流和依赖关系导览 |
+| prompt-optimizer-skill | 把草稿提示词改写成可验收的标准结构提示词 |
 | readout | 将调查结果整理为可长期阅读和分享的 HTML 文档 |
 | react-best-practices | React/Next.js 性能优化规范（Vercel 工程实践） |
 | rename-all-threads | 批量整理 Codex 会话标题，确认后统一重命名 |
@@ -34,9 +36,9 @@
 | resolve-merge-conflicts | 提取并解决 Git 合并、变基或拣选提交中的冲突 |
 | respond-to-pr-comments-in-blocklist | 逐条处理 Pull Request 评论，并在确认后回复和解决线程 |
 | review-pr | 审查 Pull Request 差异并生成结构化 review.json |
-| skill-creator | 创建、改进和评测 Skill 本身 |
 | skill-doctor | 根据真实对话评估 Agent Skills，并提出具体改进建议 |
 | spec-driven-implementation | 以产品规格和技术规格驱动重大功能的实现流程 |
+| tabbit | 在任务隔离的 Playwright 工作区中控制 Tabbit 浏览器 |
 | update-skill | 创建、更新和完善本仓库中的 SKILL.md |
 | validate-changes-match-specs | 验证分支或 Pull Request 是否符合产品、技术与安全规格 |
 | write-pr-description | 编写 Pull Request 描述、审查重点和推荐阅读顺序 |
@@ -52,6 +54,7 @@
 | gpt-taste | 高端 UX/UI 与 GSAP 滚动动效工程，强化版式与布局变化 |
 | high-end-visual-design | 按高端设计机构的字体、间距、阴影与动效标准做网页 |
 | image-to-code | 先生成并分析设计图，再按图实现高还原度网页 |
+| image-to-psb | 把图片、插画或 PDF 页还原为分层可编辑的 Photoshop PSB |
 | imagegen-frontend-mobile | 生成 iOS/Android App 界面概念图与多屏流程 |
 | imagegen-frontend-web | 为落地页每个版块单独生成设计参考图 |
 | industrial-brutalist-ui | 工业粗野主义界面，瑞士排版融合军事终端美学 |

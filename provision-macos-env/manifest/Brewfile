@@ -1,0 +1,50 @@
+# macOS 环境清单 · brew 管辖部分
+# 应用：brew bundle --file=manifest/Brewfile
+# 维护：见 manifest/README.md；添加条目用 scripts/declare.sh
+#
+# 收录原则：本清单只记录「明确确认过要长期保留」的条目。
+#
+# 已安装但未列入此处的包，会出现在 scripts/probe.sh 的
+# 「清单外 · 已直接安装」分区里，逐项确认后再用 declare.sh 加入。
+# 刻意不做批量导入——否则一时试验装上的包会被固化成"标准环境"，
+# 而清单一旦不可信，对账报告就失去全部价值。
+
+# ==== 终端与 shell ====
+brew "fzf"
+brew "fzf-tab"                 # Tab 弹 fzf 模糊选择器（依赖 fzf）
+brew "starship"
+brew "tmux"
+brew "zoxide"
+brew "zsh-autosuggestions"     # 行内灰色虚影（ghost text），→ 接受整条
+brew "zsh-completions"         # 社区补全定义，需在 compinit 前加入 fpath
+brew "zsh-syntax-highlighting" # 命令语法实时着色，须最后 source
+
+# ==== 命令行工具 ====
+brew "bat"
+brew "btop"
+brew "eza"
+brew "htop"
+brew "poppler"
+brew "yazi"
+
+# ==== 开发工具 ====
+cask "android-studio"
+brew "cmake"
+cask "flutter"
+brew "gh"
+brew "git-filter-repo"
+brew "lazygit"
+brew "ninja"
+brew "node"
+brew "openjdk@21"
+
+# ==== 容器 ====
+brew "colima"
+brew "docker"
+brew "docker-compose"
+
+# ==== 应用 ====
+cask "font-meslo-lg-nerd-font"
+cask "freecad"
+cask "ghostty"
+cask "maccy"

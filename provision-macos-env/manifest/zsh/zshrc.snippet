@@ -12,13 +12,25 @@ zstyle ':completion:*' group-name ''
 zstyle ':completion:*:descriptions' format '%F{cyan}%d%f'
 autoload -Uz colors && colors
 
-# compinit：必须带 -i，否则 shell 启动路径可能阻塞或静默失效
-#   fpath 中出现组/其他可写目录时会触发 insecure directories 检查，而它有三种结局：
+# compinit：-i 与 -C 都必须带，理由不同
+#
+# -i（不因 insecure directories 阻塞启动）
+#   fpath 里出现组/其他可写目录时会触发该检查，有三种结局：
 #     ① 有 tty   → 交互式询问 → 非交互调用（脚本/CI/编辑器/Agent）永久挂起
 #     ② 无 tty   → 直接放弃初始化 → 补全静默失效，而退出码仍是 0
 #     ③ 权限干净 → 正常
-#   -i 使其永不阻塞。真正的权限问题由 probe.sh 报告，不该靠 shell 启动时打断用户。
-autoload -Uz compinit && compinit -i
+#   -i 使其永不阻塞。真正的权限问题交给 probe.sh 报告，不该在 shell 启动时打断用户。
+#
+# -C（跳过 dump「新鲜度」校验，直接采用现有缓存）
+#   默认行为：拿 dump 头部的 "#files: N" 与当前 fpath 的实扫结果比对，不一致就整份重建。
+#   实测（2026-09-24）Agent 宿主的沙箱会挡住 $HOMEBREW_PREFIX/share/ 下的补全目录，
+#   使 N 由 1162 掉到 967（差额 180+15=195）→ 每个 shell 都判定缓存失效 → 每个 shell
+#   都重建 → 而 compdump 收尾那句 `mv <临时件> ~/.zcompdump` 会被宿主垫片按文件策略
+#   拒绝（stderr: "Brokered host rename source refused by file policy"）→ 临时文件
+#   永久堆在 $HOME，且每次启动白付一次 1162 个文件的全量扫描。
+#   -C 直接采用现有 dump：不再比对、不再重建，上述三重问题一并消失。
+#   代价：之后新装的补全不会被自动纳入 → **装完新补全后删一次 ~/.zcompdump 即可**。
+autoload -Uz compinit && compinit -i -C
 
 # fzf-tab：Tab 直接弹出 fzf 模糊选择器（必须在 compinit 之后）
 source "$ZSH_ENV_BREW_PREFIX/opt/fzf-tab/share/fzf-tab/fzf-tab.zsh"

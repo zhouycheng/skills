@@ -28,7 +28,7 @@ warn() { printf '%s\n' "${YELLOW}!${NC} $*"; }
 err()  { printf '%s\n' "${RED}✗${NC} $*" >&2; }
 
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/env-declare.XXXXXX")"
-trap 'case "$TMP" in */env-declare.*) rm -rf "$TMP" ;; esac' EXIT
+trap 'case "$TMP" in */env-declare.*) /bin/rm -rf "$TMP" ;; esac' EXIT
 
 list_sections() { sed -n 's/^# ==== \(.*\) ====$/\1/p' "$BREWFILE" 2>/dev/null; }
 

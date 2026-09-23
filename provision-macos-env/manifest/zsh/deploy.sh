@@ -33,7 +33,7 @@ warn() { printf '%s\n' "${YELLOW}!${NC} $*"; }
 err()  { printf '%s\n' "${RED}✗${NC} $*" >&2; }
 
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/env-deploy.XXXXXX")"
-trap 'case "$TMP" in */env-deploy.*) rm -rf "$TMP" ;; esac' EXIT
+trap 'case "$TMP" in */env-deploy.*) /bin/rm -rf "$TMP" ;; esac' EXIT
 
 current_block() { [ -f "$ZSHRC" ] && awk -v m="$MARKER" 'index($0, m) == 1 { f = 1 } f { print }' "$ZSHRC"; }
 

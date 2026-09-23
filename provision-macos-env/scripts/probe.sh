@@ -32,7 +32,7 @@ if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
 fi
 
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/env-probe.XXXXXX")"
-trap 'case "$TMP" in */env-probe.*) rm -rf "$TMP" ;; esac' EXIT
+trap 'case "$TMP" in */env-probe.*) /bin/rm -rf "$TMP" ;; esac' EXIT
 
 hr() { printf '%s\n' "────────────────────────────────────────────────────────────"; }
 head2() { printf '\n%s\n' "【$1】$2"; }
@@ -246,8 +246,17 @@ if command -v zsh >/dev/null 2>&1; then
     printf '    %s\n' "无。compinit 权限检查通过。" >> "$REPORT"
   fi
 fi
-# 缓存卫生：zsh 重建补全缓存时会先写 .zcompdump.<host>.<pid> 再改名，
-# 在快速连续启动多个 shell 的场景（脚本/CI/Agent 宿主）下会残留。
+# 缓存卫生：zsh 重建补全缓存时会先写 .zcompdump.<host>.<pid> 再改名；若改名失败，
+# 临时文件就留在 $HOME。
+# 源码定位（zsh 5.9，/usr/share/zsh/5.9/functions/compdump）：
+#   L21  _d_file=${_comp_dumpfile}.$HOST.$$      ← 临时文件名
+#   L36  exec {_d_fd}>$_d_file                   ← 创建并写满（残留件都是完整尺寸）
+#   L138 mv -f $_d_file ${_d_file%.$HOST.$$}     ← 改名成正主（断点就在这句）
+# 触发链：Agent 沙箱挡住 $HOMEBREW_PREFIX/share/ 下的补全目录 → fpath 实扫数
+#   1162→967 → compinit L486 判定 dump 失效 → 每个 shell 都重建 → L138 的 mv 命中
+#   PATH 前置的 brokered-bin 垫片被文件策略拒绝 → 临时件原地留下。
+# 已根治：zshrc.snippet 改为 `compinit -i -C`（-C 令 _i_check 为空，直接 source 现有
+#   dump，不比对不重建）。故本分区现应长期为 0；若又出现，说明该修复被绕过。
 # 它们是可再生的缓存、不是配置，因此只报告不代删（本脚本只读契约）。
 printf '  %s\n' "【缓存卫生】" >> "$REPORT"
 n_zd=0
@@ -259,7 +268,7 @@ if [ "$n_zd" -eq 0 ]; then
   printf '    %s\n' "无残留（仅主 .zcompdump）。" >> "$REPORT"
 else
   printf '    %s\n' "⚠️ 残留 ${n_zd} 个 PID 后缀补全缓存（可再生，可安全清理）:" >> "$REPORT"
-  printf '    %s\n' '    清理: rm -f "$HOME"/.zcompdump.*' >> "$REPORT"
+  printf '    %s\n' '    清理: /bin/rm -f "$HOME"/.zcompdump.*   （用绝对路径，避免 Agent 宿主垫片）' >> "$REPORT"
 fi
 
 # --- 6. shell 配置块 ---

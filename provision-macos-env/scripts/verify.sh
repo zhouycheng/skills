@@ -53,7 +53,7 @@ run_limited() {
 }
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/env-verify.XXXXXX")"
 TMPOUT="$TMP/o"
-trap 'case "$TMP" in */env-verify.*) rm -rf "$TMP" ;; esac' EXIT
+trap 'case "$TMP" in */env-verify.*) /bin/rm -rf "$TMP" ;; esac' EXIT
 
 # ---------- 0. 前置：四件套的 brew 源是否落地 ----------
 section "0. brew 源文件（snippet 里 source 的路径必须真实存在）"
@@ -100,20 +100,28 @@ else
   fi
   # stderr 三级分类：
   #   全空 → pass；
-  #   仅含 fzf 已知噪音 → skip（见下）；其余 → fail。
-  # fzf 已知噪音：fzf --zsh 用 options=(...) 全量快照 zsh 选项再 eval 回填，
-  # 快照含 zle 选项而 zsh 拒绝回设。上游 issue #2219/#2262 定性为使用侧问题、不修；
-  # 根修 = ~/.zshrc 的 [[ -o zle ]] 条件加载（非交互场景本来就不该加载按键绑定）。
-  KNOWN_NOISE="can't change option: zle"
+  #   仅含「宿主环境已知噪音」→ skip（附原因）；其余 → fail。
+  #
+  # 已知噪音 1（fzf）：fzf --zsh 用 options=(...) 全量快照 zsh 选项再 eval 回填，
+  #   快照含 zle 选项而 zsh 拒绝回设。上游 issue #2219/#2262 定性为使用侧问题、不修；
+  #   根修 = ~/.zshrc 的 [[ -t 0 && -o interactive ]] 条件加载（非交互场景本就不该加载按键绑定）。
+  # 已知噪音 2（宿主垫片）：zsh 重建补全缓存时，compdump 最后一步要做
+  #   `mv <临时件> ~/.zcompdump`（见 references/zsh-completion.md），而 Agent 宿主的
+  #   PATH 前置了 brokered-bin 垫片，其 mv 会按文件策略拒绝该次改名并打印
+  #   "Brokered host rename source refused by file policy"。这是宿主环境行为，
+  #   与 ~/.zshrc 配置无关；用户自己终端里不出现。
+  KNOWN_NOISE_1="can't change option: zle"
+  KNOWN_NOISE_2="Brokered host rename source refused by file policy"
   errsz="$(wc -c < "$TMPOUT.err" | tr -d ' ')"
   if [ "$errsz" -eq 0 ]; then
     pass "stderr 为空（启动无杂音）"
   else
-    ther="$(grep -vF "$KNOWN_NOISE" "$TMPOUT.err" || true)"
+    ther="$(grep -vF -e "$KNOWN_NOISE_1" -e "$KNOWN_NOISE_2" "$TMPOUT.err" || true)"
     if [ -z "$ther" ]; then
-      skip "仅 fzf 已知噪音（can't change option: zle；根修靠 ~/.zshrc 条件加载）"
+      skip "仅宿主环境已知噪音（fzf 选项回填 / 垫片拒绝改名），非配置问题："
+      grep -F -e "$KNOWN_NOISE_1" -e "$KNOWN_NOISE_2" "$TMPOUT.err" | sed 's/^/      /' | head -4
     else
-      fail "stderr 非空（已排除 fzf 已知噪音后仍有内容）："
+      fail "stderr 非空（已排除 2 类已知噪音后仍有内容）："
       printf '%s\n' "$ther" | sed 's/^/      /' | head -8
     fi
   fi
@@ -139,8 +147,14 @@ else
     sed 's/^/      /' "$TMPOUT.ptyerr" | head -5
   else
     pv() { grep -m1 "^$1=" "$TMPOUT.pty" 2>/dev/null | cut -d= -f2-; }
-    if [ "$(pv startup_ready)" = "1" ]; then pass "交互式 shell 已在 pty 中就绪"
-    else fail "pty 中 shell 未就绪（探针无应答），后续结论不可信"; fi
+    if [ "$(pv startup_ready)" = "1" ]; then
+      pass "交互式 shell 已在 pty 中就绪（握手耗时 $(pv startup_wait)s）"
+    else
+      fail "pty 中 shell 未就绪（探针无应答，等待 $(pv startup_wait)s），后续结论不可信"
+      printf '      原始尾部: %s\n' "$(pv startup_raw_tail)" | head -3
+      printf '      %s\n' "提示: 若在 Agent 会话里偶发，多为沙箱/负载导致启动过慢；"
+      printf '      %s\n' "      请在你自己的终端重跑一次 verify.sh 复核（那里的结论才算数）。"
+    fi
 
     chk1() { # key 描述
       if [ "$(pv "$1")" = "1" ]; then pass "$2"

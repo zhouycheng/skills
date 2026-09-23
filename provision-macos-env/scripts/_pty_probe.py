@@ -36,8 +36,10 @@ FAKE_HISTORY = [
 GHOST_PREFIX = "git stat"
 GHOST_EXPECT = "us --porcelain"
 
-STARTUP_DRAIN = 2.5   # fork 后固定等待 .zshrc 跑完的秒数
-PROBE_TIMEOUT = 4.0   # 单条探针的往返超时
+STARTUP_DRAIN = 2.0   # fork 后先静默等待，让 .zshrc 开始执行
+READY_TIMEOUT = 25.0  # 自适应「就绪握手」的总预算（慢机 / 沙箱下启动可能远超固定 drain）
+PROBE_TIMEOUT = 6.0   # 单条探针的往返超时
+PROBE_RETRY = 2       # 单条探针的尝试次数
 
 NONCE = "VP" + secrets.token_hex(3) + "_"
 
@@ -117,8 +119,33 @@ def main():
         pass  # 拉宽失败不致命，nonce 协议仍有三重过滤兜底
 
     try:
+        # ---- 阶段 1：就绪握手（不用固定 drain）----
+        # 固定 drain 不可靠：starship / zoxide / fzf + 四个插件在慢机或 Agent 沙箱下
+        # 启动可能远超几秒，此时投递的探针会被**正在执行的 .zshrc 吞掉**（pty 的 stdin
+        # 就是那个 tty），现象是「全部探针无应答」—— 把「环境慢」误判成「功能坏」。
+        # 改为反复投递哨兵直到 shell 回话。就绪判定要求行尾紧跟数字，
+        # 这样 ZLE 回显的 `print "NONCE...ready=1"` 因末尾是引号而不会被当成结果。
         startup = read_for(fd, STARTUP_DRAIN)
+        pat = re.compile(
+            rb"(?m)^" + re.escape(NONCE.encode()) + rb"([A-Za-z_]+)=([^\r\n$(\"]*)"
+        )
+        ready_pat = re.compile(
+            rb"(?m)^" + re.escape(NONCE.encode()) + rb"ready=([0-9]+)[ \t]*\r?$"
+        )
+        t0 = time.time()
+        ready = False
+        while time.time() - t0 < READY_TIMEOUT:
+            os.write(fd, ('print "%sready=1"\n' % NONCE).encode())
+            startup += read_for(fd, 0.6, stop=lambda b: ready_pat.search(b))
+            if ready_pat.search(startup):
+                ready = True
+                break
         emit("startup_bytes", len(startup))
+        emit("startup_wait", "%.1f" % (time.time() - t0))
+        emit("startup_ready", 1 if ready else 0)
+        if not ready:
+            # 无应答时交出尾部原始输出：用于区分「环境慢/被沙箱限制」与「配置真坏」
+            emit("startup_raw_tail", startup[-200:].decode("utf-8", "replace"))
 
         # 历史卫生（只读探针的底线）：
         #   1. SAVEHIST=0 —— 退出时不把探针命令写进用户真实历史
@@ -133,23 +160,17 @@ def main():
         # 解析规则：nonce 前缀 + 行首锚定 + 值域黑名单（$ ( " 与引号）
         #   真实输出:  VP9f3a2c_p_comps_brew=1            <- 独占一行，命中
         #   ZLE 回显:  print "VP9f3a2c_p_comps_brew=$((  <- 行首是 print，且含 $(，双杀
-        pat = re.compile(
-            rb"(?m)^" + re.escape(NONCE.encode()) + rb"([A-Za-z_]+)=([^\r\n$(\"]*)"
-        )
-
-        ready = False
         for key, expr in PROBES:
             cmd = 'print "%s%s=%s"' % (NONCE, key, expr)
-            os.write(fd, (cmd + "\n").encode())
-            buf = read_for(fd, PROBE_TIMEOUT, stop=lambda b: pat.search(b))
-            m = pat.search(buf)
-            value = m.group(2).decode("utf-8", "replace") if m else ""
+            value = ""
+            for _attempt in range(PROBE_RETRY):
+                os.write(fd, (cmd + "\n").encode())
+                buf = read_for(fd, PROBE_TIMEOUT, stop=lambda b: pat.search(b))
+                m = pat.search(buf)
+                if m:
+                    value = m.group(2).decode("utf-8", "replace")
+                    break
             emit(key, value)
-            if not ready and value:
-                ready = True
-                emit("startup_ready", 1)
-        if not ready:
-            emit("startup_ready", 0)
 
         # ---- 虚影回显：输入前缀，看终端里是否吐出补全的余下文本 ----
         os.write(fd, GHOST_PREFIX.encode())

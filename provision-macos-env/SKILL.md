@@ -112,6 +112,12 @@ scripts/declare.sh --remove <包名>             # 移出清单
 - **不预建空壳目录**。需要管 npm 全局包时再加 `manifest/npmfile.txt`，用到才建，
   避免"看起来已经支持"的错觉。
 - **不写 `~/.zshrc` 的那段配置块**——它由 `zshrc.snippet` 生成，手改必然漂移。
+- **不把受管块里的 `compinit -i -C` 改回单个 `-i`**。`-C` 是刻意加的：Agent 宿主的沙箱
+  会挡住 `$HOMEBREW_PREFIX/share/` 下的补全目录，使 fpath 实扫数与缓存头部声明不符，
+  于是每个 shell 都判定缓存失效并重建，而收尾的 `mv` 又被宿主垫片拒绝 → `$HOME` 堆积
+  `.zcompdump.<host>.<pid>` 临时件、启动变慢。`-C` 直接采用现有缓存，一次解决三者。
+  代价是「新补全不再自动纳入」→ **装完新补全后删一次 `~/.zcompdump`**。
+  细节与对照实验见 `references/zsh-completion.md`。
 - **不代跑 `sudo` / `chmod`**。
 
 ## 文件与脚本速查
@@ -122,6 +128,7 @@ scripts/verify.sh             功能级验证（运行时：补全能不能补�
 scripts/declare.sh            把包写进/移出 Brewfile 分类段（只改声明，不装不卸）
 manifest/Brewfile             唯一手工维护点
 manifest/README.md            清单维护规则
+manifest/zsh/zshrc.snippet    ~/.zshrc 受管块的唯一真相源
 manifest/zsh/deploy.sh        对齐 ~/.zshrc + 落位 assets
 manifest/assets/              无上游的自建资产
 ```
@@ -133,7 +140,8 @@ manifest/assets/              无上游的自建资产
 **深入细节时读**：
 
 - `references/zsh-completion.md` — 补全故障诊断：compinit 根因判定、四个假阴性陷阱、插件互斥、
-  正确验证方法、fzf 启动噪音与 shell 历史卫生。**只在诊断补全问题时读。**
+  正确验证方法、fzf 启动噪音、shell 历史卫生、`.zcompdump.<host>.<pid>` 残留的源码级机制。**只在诊断补全问题时读。**
 - `references/manifest-format.md` — Brewfile 格式与分类约定、`brew bundle` 命令语义、
-  脚本维护的四个已验证坑（`$VAR`+中文标点、BSD grep 的 `\xNN` 陷阱、zsh 空 glob 中断、
-  Agent 环境 `rm` 被拦进回收站）。**只在改清单或改脚本时读。**
+  脚本维护的五个已验证坑（`$VAR`+中文标点、BSD grep 的 `\xNN` 陷阱、zsh 空 glob 中断、
+  **Agent 宿主 PATH 垫片劫持 `rm` 等 21 个命令**、macOS `/bin` 与 `/usr/bin` 绝对路径核实）。
+  **只在改清单或改脚本时读。**

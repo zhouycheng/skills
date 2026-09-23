@@ -57,7 +57,7 @@ mas "App Name", id: 123456    # App Store（需 mas 命令）
    但不能防止写错包名——写错包名会在下次 `check` 或 `install` 时才暴露。
 2. `brew bundle list` 默认只列 formula，要列 cask 必须加 `--all`。
 
-## 脚本维护：两个已验证的坑
+## 脚本维护：四个已验证的坑
 
 ### 坑 1：`$VAR` 后紧跟中文标点会被吞进变量名
 
@@ -71,11 +71,15 @@ warn "未声明 ${PKG}，无需移除。"   # ✓ 始终加花括号
 **规则：变量后面只要紧跟非 ASCII 字符，一律写成 `${VAR}`。** 这个 bug 不会在语法检查
 （`bash -n`）中暴露，只在运行时炸，且在 `set -u` 下会直接中断脚本。
 
-排查方法：
+排查方法（**必须用 `[^ -~]` 这种 POSIX 写法**）：
 
 ```bash
-grep -nE '\$[A-Za-z_][A-Za-z0-9_]*[^\x00-\x7F]' scripts/*.sh
+grep -nE '\$[A-Za-z_][A-Za-z0-9_]*[^ -~]' scripts/*.sh ../manifest/zsh/deploy.sh
 ```
+
+⚠️ **不要用 `[^\x00-\x7F]`**：BSD grep（macOS 自带）不解析括号表达式里的 `\xNN` 十六进制转义，
+`\x00-\x7F` 会被当成字面字符集 `{ \, x, 0, -, 7, F }`，于是「非此集合」几乎匹配任意字符，
+**每一行含 `$VAR` 的行都会假报**。本项目实测踩过：用它审计时 4 个脚本报出十几处假阳性。
 
 ### 坑 2：判断"顶层包"不能用 `brew list`
 
@@ -100,3 +104,42 @@ for f in d["formulae"]:
 
 cask 侧同理：`brew list --cask` 已天然是顶层，安装日期可从 `/opt/homebrew/Caskroom/<name>` 的
 目录 mtime 廉价取得。
+
+### 坑 3：zsh 下空 glob 会中断整条复合命令
+
+Agent 宿主常以 zsh 执行命令。zsh 默认 `nomatch`：**glob 匹配不到任何文件时报错，
+并中止它所在的整个命令列表**——同一行里 glob 之前的 `echo` 都不会执行。这与 bash（保留字面量）行为相反，
+极易把「没匹配到」误判成「脚本没跑」。
+
+```bash
+# ✗ 若 /tmp/env-verify.* 不存在，整条命令直接中止，前面的 echo 也不输出
+for f in /tmp/a /tmp/env-verify.*; do mv "$f" ~/.Trash/; done
+
+# ✓ 方案 A：开空 glob（放脚本开头）
+setopt NULL_GLOB 2>/dev/null || true
+# ✓ 方案 B：用 zsh 的 (N) 限定符，无匹配时展开为空
+for f in /tmp/env-verify.*(N); do ...; done
+# ✓ 方案 C：先判存在（最省心的可移植写法）
+[ -e "$f" ] || continue
+```
+
+### 坑 4：Agent 环境里 `rm` 不是真删，而是被拦截进回收站
+
+| 环境 | `rm` 身份 | 行为 |
+|---|---|---|
+| Agent 宿主 shell | shell 函数，转发到 `trash(1)` | 目标**移入 `~/.Trash`**，不销毁 |
+| 用户自己的 login shell | `/bin/rm` | 标准真删 |
+
+```bash
+type rm        # agent 环境: "rm is a shell function from zsh"；用户终端: "rm is /bin/rm"
+```
+
+**两个推论：**
+
+1. 脚本 EXIT trap 里的 `rm -rf "$TMP"` 在 Agent 环境下会把临时目录**沉进 `~/.Trash`**，
+   于是每跑一次脚本回收站就多一个空目录。这是**环境行为，不是脚本缺陷**——
+   用 `type rm` 判定即可，不要在脚本里为此加补丁。
+2. 反过来说，这也是**安全正向**：在 Agent 手上没有真正被销毁的东西。
+   用户本人在终端运行时则是标准语义，无需任何适配。
+
+需要确认「某次操作是否真的删掉了」时，**以 `[ -e <path> ]` 为准，不要以 `rm` 无报错为准**。

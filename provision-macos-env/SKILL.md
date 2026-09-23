@@ -64,7 +64,10 @@ agent_created: true
 - 只做用户批准的项，一次一个。
 - 每项执行后立即验证（`brew list <pkg>` / `command -v <cmd>`），**失败即停**，不继续后续项。
 - **涉及 `sudo` / `chmod` 的步骤不由 Agent 执行**，改为输出命令请用户本人跑。
-- 配置类改动走 `manifest/zsh/deploy.sh`（它自带备份与 `zsh -n` 校验），不要手改 `~/.zshrc`。
+- 配置类改动走 `manifest/zsh/deploy.sh`（它自带备份与 `zsh -n` 校验）。
+  **它只管「标记行起至文件末尾」的那一段**；标记行**之前**是用户自有配置
+  （starship / zoxide / fzf 的初始化等），不归它管——需要改时直接改并单独备份，
+  改完用 `deploy.sh --check` 确认没有碰坏受管块。
 
 ### 阶段 4 · 回写声明（闭环）
 
@@ -114,7 +117,8 @@ scripts/declare.sh --remove <包名>             # 移出清单
 ## 文件与脚本速查
 
 ```
-scripts/probe.sh              只读扫描，对账唯一入口
+scripts/probe.sh              只读扫描，对账唯一入口（静态：清单 vs 装机）
+scripts/verify.sh             功能级验证（运行时：补全能不能补、虚影画没画出来）
 scripts/declare.sh            把包写进/移出 Brewfile 分类段（只改声明，不装不卸）
 manifest/Brewfile             唯一手工维护点
 manifest/README.md            清单维护规则
@@ -122,9 +126,14 @@ manifest/zsh/deploy.sh        对齐 ~/.zshrc + 落位 assets
 manifest/assets/              无上游的自建资产
 ```
 
+`probe.sh` 与 `verify.sh` 是**互补**的两层，都要通过才算真的交付：
+前者看声明与资产的静态对账，后者在伪终端里验证运行时行为（`verify.sh` 依赖同目录的
+`_pty_probe.py`，需要 `python3`；无 python3 时该项自动跳过并说明原因）。
+
 **深入细节时读**：
 
 - `references/zsh-completion.md` — 补全故障诊断：compinit 根因判定、四个假阴性陷阱、插件互斥、
-  正确验证方法。**只在诊断补全问题时读。**
+  正确验证方法、fzf 启动噪音与 shell 历史卫生。**只在诊断补全问题时读。**
 - `references/manifest-format.md` — Brewfile 格式与分类约定、`brew bundle` 命令语义、
-  脚本维护的两个已验证坑。**只在改清单或改脚本时读。**
+  脚本维护的四个已验证坑（`$VAR`+中文标点、BSD grep 的 `\xNN` 陷阱、zsh 空 glob 中断、
+  Agent 环境 `rm` 被拦进回收站）。**只在改清单或改脚本时读。**

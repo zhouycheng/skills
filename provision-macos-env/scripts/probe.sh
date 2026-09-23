@@ -260,7 +260,7 @@ fi
 # 它们是可再生的缓存、不是配置，因此只报告不代删（本脚本只读契约）。
 printf '  %s\n' "【缓存卫生】" >> "$REPORT"
 n_zd=0
-for f in "$HOME"/.zcompdump.*; do
+for f in "$HOME"/.zcompdump.*(N); do
   [ -e "$f" ] || continue
   n_zd=$((n_zd + 1))
 done

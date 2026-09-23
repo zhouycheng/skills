@@ -28,6 +28,7 @@
 | pptx | 创建、读取、编辑 PowerPoint 演示文稿 |
 | pr-walkthrough | 生成可交互的 Pull Request 系统、数据流和依赖关系导览 |
 | prompt-optimizer-skill | 把草稿提示词改写成可验收的标准结构提示词 |
+| provision-macos-env | 整机重装与环境对账：brew 清单声明、zsh 补全部署、运行时验证 |
 | readout | 将调查结果整理为可长期阅读和分享的 HTML 文档 |
 | react-best-practices | React/Next.js 性能优化规范（Vercel 工程实践） |
 | rename-all-threads | 批量整理 Codex 会话标题，确认后统一重命名 |
@@ -36,7 +37,6 @@
 | resolve-merge-conflicts | 提取并解决 Git 合并、变基或拣选提交中的冲突 |
 | respond-to-pr-comments-in-blocklist | 逐条处理 Pull Request 评论，并在确认后回复和解决线程 |
 | review-pr | 审查 Pull Request 差异并生成结构化 review.json |
-| setup-zsh-completion | 启用并修复 zsh 补全：Tab 候选选择器与行内灰色虚影，含声明式安装与分层回退 |
 | skill-doctor | 根据真实对话评估 Agent Skills，并提出具体改进建议 |
 | spec-driven-implementation | 以产品规格和技术规格驱动重大功能的实现流程 |
 | tabbit | 在任务隔离的 Playwright 工作区中控制 Tabbit 浏览器 |

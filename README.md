@@ -36,6 +36,7 @@
 | resolve-merge-conflicts | 提取并解决 Git 合并、变基或拣选提交中的冲突 |
 | respond-to-pr-comments-in-blocklist | 逐条处理 Pull Request 评论，并在确认后回复和解决线程 |
 | review-pr | 审查 Pull Request 差异并生成结构化 review.json |
+| setup-zsh-completion | 启用并修复 zsh 补全：Tab 候选选择器与行内灰色虚影，含声明式安装与分层回退 |
 | skill-doctor | 根据真实对话评估 Agent Skills，并提出具体改进建议 |
 | spec-driven-implementation | 以产品规格和技术规格驱动重大功能的实现流程 |
 | tabbit | 在任务隔离的 Playwright 工作区中控制 Tabbit 浏览器 |

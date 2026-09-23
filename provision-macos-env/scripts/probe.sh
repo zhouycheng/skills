@@ -246,6 +246,21 @@ if command -v zsh >/dev/null 2>&1; then
     printf '    %s\n' "无。compinit 权限检查通过。" >> "$REPORT"
   fi
 fi
+# 缓存卫生：zsh 重建补全缓存时会先写 .zcompdump.<host>.<pid> 再改名，
+# 在快速连续启动多个 shell 的场景（脚本/CI/Agent 宿主）下会残留。
+# 它们是可再生的缓存、不是配置，因此只报告不代删（本脚本只读契约）。
+printf '  %s\n' "【缓存卫生】" >> "$REPORT"
+n_zd=0
+for f in "$HOME"/.zcompdump.*; do
+  [ -e "$f" ] || continue
+  n_zd=$((n_zd + 1))
+done
+if [ "$n_zd" -eq 0 ]; then
+  printf '    %s\n' "无残留（仅主 .zcompdump）。" >> "$REPORT"
+else
+  printf '    %s\n' "⚠️ 残留 ${n_zd} 个 PID 后缀补全缓存（可再生，可安全清理）:" >> "$REPORT"
+  printf '    %s\n' '    清理: rm -f "$HOME"/.zcompdump.*' >> "$REPORT"
+fi
 
 # --- 6. shell 配置块 ---
 head2 6 "shell 配置块" >> "$REPORT"

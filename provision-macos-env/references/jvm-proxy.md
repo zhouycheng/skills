@@ -127,6 +127,43 @@ export JAVA_TOOL_OPTIONS="-Dhttp.proxyHost=127.0.0.1 -Dhttp.proxyPort=7897 \
 
 即：**同一命令、同一网络，仅差代理参数，结果相反**。这是最干净的证据。
 
+### ⚠️ 但在 Agent 宿主里做这个对照实验，结论可能是假的
+
+2026-09-24 追加验证发现：Agent 宿主 shell 里 `HTTP_PROXY=http://127.0.0.1:<沙箱端口>`
+且 **`NO_PROXY` 未设置**。这会造成两类假阴性，**且只有 Java / Dart 这类进程中招**：
+
+| 观察到 | 真相 |
+|---|---|
+| `flutter doctor` 报 `Network resources`：storage.googleapis.com / maven.google.com / github.com 全部 `Connection terminated during handshake` | **沙箱代理造成的假阴性**。`env -u HTTP_PROXY -u HTTPS_PROXY … flutter doctor` → `[✓] Network resources`，问题类别从 4 降到 2 |
+| `flutter doctor` 报 `Proxy Configuration: HTTP_PROXY is set / NO_PROXY is not set` | 同上，是宿主特性；用户 login shell 里这些变量实测为空 |
+| 同一个 `curl` 目标，`--noproxy '*'` 与 `-x <用户代理>` 结果矛盾 | 宿主的网络策略按目标域放行/拦截，不可据以推断用户环境 |
+
+**代价**：本次险些把「沙箱假阴性」当成用户的真实故障交付出去。
+
+**纪律**：在 Agent 宿主里对 **Java / Dart / Node 等非 curl 进程**的网络结论，
+必须先用 `env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy <命令>` 复跑一遍，
+并在结论里标注「宿主内测得，需在用户终端复核」。
+`curl` 这类明确读 `--noproxy` 的工具也不能单独作准。
+
+**给用户终端留的复测命令**（判据：两次结果相反才说明必须配代理）：
+
+```bash
+SDK="$HOME/Library/Android/sdk/cmdline-tools/latest/bin/sdkmanager"
+JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" \
+  "$SDK" --list </dev/null 2>&1 | grep -c 'IO exception while downloading manifest'
+
+export JAVA_TOOL_OPTIONS="-Dhttp.proxyHost=127.0.0.1 -Dhttp.proxyPort=7897 \
+-Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=7897"
+JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" \
+  "$SDK" --list </dev/null 2>&1 | grep -c 'IO exception while downloading manifest'
+unset JAVA_TOOL_OPTIONS
+```
+
+**另需注意**：许可证的准确数字来自 `sdkmanager --licenses` 的收尾行
+（本次实测 `6 of 7 SDK package licenses not accepted.`），
+**不要用中间过程推测**——先前一次误记为「4 个中 3 个未接受」。
+用 `printf '%s\n' n n n … | sdkmanager --licenses` 可以**只查看不改变**状态。
+
 ---
 
 ## 四、插件手动安装（网络彻底不通时的兜底）

@@ -60,12 +60,41 @@ systemProp.http.nonProxyHosts=localhost|127.0.0.1|*.local
 **Settings → Appearance & Behavior → System Settings → HTTP Proxy**
 
 - 选 **Manual proxy configuration** → **HTTP** → Host `127.0.0.1`、Port `7897`
-  → 勾 **Same port for HTTPS**（或单独填）
-- 点 **Check connection** 填 `https://plugins.jetbrains.com` 验证
+  → 点 **Check connection** 填 `https://plugins.jetbrains.com` 验证
 - ⚠️ **不要选「Auto-detect proxy settings」（PAC）**，除非系统真的配了 PAC。
   实测坑：配置文件里留下 `USE_PROXY_PAC=true`，而系统 `ProxyAutoConfigEnable: 0`
   （PAC 未启用）→ IDE 落到直连 → 插件下载 TLS 握手被切断，报
   `Remote host terminated the handshake`。
+- 端口填**代理端口**（`7897`），不是 `80`。切到 Manual 时 AS 会保留上一次的默认值 `80`，
+  **Host 是空的、Port 显示 80 → 必须两个都改**，否则等于没配。
+- **AS 2026.1.x 的这个对话框只有一个 Port 字段**（选 HTTP 时 HTTP 与 HTTPS 共用），
+  没有旧版的「Same port for HTTPS」勾选框 —— 别去找那个框，填完 Port 就是两者都生效。
+- 建议在 **No proxy for** 填 `localhost,127.0.0.1,*.local`。
+  这里填的是**目标主机**的排除列表，不影响代理自身所在的 `127.0.0.1:7897`，可放心填。
+
+#### 顶部黄色警告「You have JVM property https.proxyHost set to 127.0.0.1…」是什么
+
+完整原文：
+> You have JVM property https.proxyHost set to 127.0.0.1. This may lead to incorrect
+> behaviour. Proxy should be set in Settings | HTTP Proxy. This JVM property is old and
+> its usage is not recommended by Oracle. (Note: it could have been assigned by some code
+> dynamically.)
+
+**这不是错误，也不是"代理配错了"**。含义是：AS 启动时**从外部环境**继承了 JVM 代理属性
+——最常见就是「启动它的那个终端里 `export JAVA_TOOL_OPTIONS=...`」（例如刚跑完
+`sdkmanager --licenses`）。后果是**代理来源有两处并存**（环境变量 + IDE 设置），
+Oracle/IntelliJ 都不建议这样。
+
+处置（二选一，推荐第一种）：
+
+1. **以 IDE 设置为准**：退出 AS → 在终端 `unset JAVA_TOOL_OPTIONS`（或直接从
+   Dock/Finder 启动 AS）→ 重启。警告消失。
+2. 继续用环境变量：功能上可行（前提是四个属性都齐：http/https 的 host **和** port），
+   但每次都要从那个终端启动，且与 IDE 设置冲突时行为不确定。
+
+> 排查提示：确认这个属性从哪来，先看 `~/.zshrc` / `~/.zshenv` / `~/.zprofile` 有没有
+> `JAVA_TOOL_OPTIONS`，再看 `launchctl getenv JAVA_TOOL_OPTIONS`（决定 Dock 启动的 App
+> 会不会继承）。两处都没有却仍出现 → 就是"某个终端临时 export 后启动的"。
 
 对应配置文件（**只读排查用，不要手改**——`~/Library` 属受保护区）：
 
@@ -181,6 +210,8 @@ curl -s -X POST "https://plugins.jetbrains.com/api/search/compatibleUpdates" \
 | 8 | `build=` 少了 `AI-` 前缀 | **无声失败**（不返回重定向），易误判为"插件不存在" | 直接读 `Android Studio.app/Contents/Resources/build.txt` 原文 |
 | 9 | 用 `9112` 当作 Flutter 的 pluginId | `api/plugins/9112` → 404 | 真实 pluginId 是 **9212**；用 `compatibleUpdates` 反查 |
 | 10 | 插件端点偶发无响应就断言"不可用" | 同参数一次成功一次空 | 重试 2–3 次再下结论 |
+| 11 | 切到 Manual 后只改 Host 没改 Port | Host 空、Port 还是默认 `80` | 两个字段都要填：`127.0.0.1` + `7897` |
+| 12 | 从已 export 的终端启动 AS | 顶部黄色警告 JVM property `https.proxyHost` | 不算错误；从 Dock 启动或先 `unset` |
 
 ---
 

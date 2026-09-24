@@ -14,6 +14,8 @@ agent_created: true
 - 想知道"我现在装了哪些、清单里少了什么、声明了哪些还没装"
 - 日常维护：把新装的包纳入清单，或把不再需要的从清单移除
 - 排查 zsh 补全失效（Tab 不补全、弹出候选询问、缺行内灰色虚影）
+- 排查 JVM 系工具走不了代理（Android Studio / sdkmanager / Gradle 下不动插件或依赖，
+  报 `Remote host terminated the handshake`、`IO exception while downloading manifest`）
 
 ## 三条红线（任何时候不得违反）
 
@@ -145,3 +147,7 @@ manifest/assets/              无上游的自建资产
   脚本维护的五个已验证坑（`$VAR`+中文标点、BSD grep 的 `\xNN` 陷阱、zsh 空 glob 中断、
   **Agent 宿主 PATH 垫片劫持 `rm` 等 21 个命令**、macOS `/bin` 与 `/usr/bin` 绝对路径核实）。
   **只在改清单或改脚本时读。**
+- `references/jvm-proxy.md` — JVM 系工具（Android Studio / sdkmanager / Gradle）的代理配置：
+  为什么系统代理与 `HTTP_PROXY` 都不生效、三条配置通道、对照实验诊断法、
+  插件手动安装（`pluginManager` 端点 + `unzip -t`，含 `id=`/`build=` 取值陷阱：
+  Flutter 必须用 `io.flutter` 而非 `Flutter`，`build` 必须带 `AI-` 前缀）。**只在排查这类网络故障时读。**

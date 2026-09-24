@@ -28,7 +28,7 @@
 | pptx | 创建、读取、编辑 PowerPoint 演示文稿 |
 | pr-walkthrough | 生成可交互的 Pull Request 系统、数据流和依赖关系导览 |
 | prompt-optimizer-skill | 把草稿提示词改写成可验收的标准结构提示词 |
-| provision-macos-env | 整机重装与环境对账：brew 清单声明、zsh 补全部署、运行时验证 |
+| workstation-lookup | 从任何项目快速读取本机环境清单、判断时效并定向核验；配置维护由 workstation-config 项目技能负责 |
 | readout | 将调查结果整理为可长期阅读和分享的 HTML 文档 |
 | react-best-practices | React/Next.js 性能优化规范（Vercel 工程实践） |
 | rename-all-threads | 批量整理 Codex 会话标题，确认后统一重命名 |
